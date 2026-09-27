@@ -1,0 +1,420 @@
+/* ===========================================================
+   ConsiliumMD / CARMA supervisor deck — custom theme
+   This file overrides reveal.js's "black" theme (which sets a
+   42px base font and a 1.6em h2 by default — too big for a
+   dense supervisor deck). We pin a smaller base font and use
+   compact rem-based headings, then keep our component styles.
+   =========================================================== */
+
+:root {
+  --navy: #0b1f3a;
+  --teal: #0e828a;
+  --teal-soft: #ecf7f8;
+  --amber: #e08e1f;
+  --amber-soft: #fdf4e3;
+  --slate: #33404f;
+  --muted: #6b7785;
+  --bg: #ffffff;
+  --bg-soft: #f6f8fb;
+  --border: #cbd3dd;
+  --green: #16a34a;
+  --red: #c0392b;
+
+  /* Override reveal.js black theme defaults */
+  --r-background-color: #ffffff;
+  --r-main-font: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --r-main-font-size: 26px;          /* was 42px — too big */
+  --r-main-color: var(--slate);
+  --r-heading-font: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --r-heading-color: var(--navy);
+  --r-heading-line-height: 1.15;
+  --r-heading-text-transform: none;
+  --r-heading-font-weight: 700;
+  --r-heading1-size: 1.8em;
+  --r-heading2-size: 1.35em;
+  --r-heading3-size: 1.0em;
+  --r-block-margin: 6px;
+  --r-heading-margin: 0 0 8px 0;
+  --r-link-color: var(--teal);
+  --r-link-color-hover: #0a6b71;
+}
+
+/* ---------- Root + typography ------------------------------ */
+.reveal {
+  font-family: var(--r-main-font);
+  color: var(--slate);
+  background: var(--bg);
+}
+
+.reveal-viewport { background: var(--bg); }
+
+.reveal .slides { text-align: left; }
+
+.reveal h1, .reveal h2, .reveal h3, .reveal h4 {
+  color: var(--navy);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  text-shadow: none;
+  line-height: 1.15;
+  margin: 0 0 0.3em 0;
+}
+
+.reveal h2 {
+  font-size: 1.35em;   /* ~35px at 26px base — fits one line */
+  margin-bottom: 0.15em;
+}
+
+.reveal h3 { font-size: 1.0em; }
+
+.reveal p, .reveal li {
+  color: var(--slate);
+  font-size: 0.55em;   /* ~14px at 26px base */
+  line-height: 1.4;
+}
+
+.reveal .lede {
+  font-size: 0.55em;
+  color: var(--muted);
+  margin-top: 0;
+  margin-bottom: 0.6em;
+  font-style: italic;
+}
+
+.reveal code {
+  background: var(--bg-soft);
+  color: var(--navy);
+  padding: 0.05em 0.3em;
+  border-radius: 4px;
+  font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+
+/* Reveal.js adds inline-block on lists — undo so cards fill column */
+.reveal .card ul,
+.reveal .card ol,
+.reveal .papers,
+.reveal .takeaways {
+  display: block;
+}
+
+/* ---------- Title slide ------------------------------------- */
+.title-slide {
+  color: #ffffff;
+  text-align: left;
+}
+
+.title-slide .brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  margin-bottom: 1.2em;
+}
+
+.brand-mark {
+  width: 1.8em;
+  height: 1.8em;
+  background: var(--teal);
+  color: #ffffff;
+  border-radius: 0.3em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.4em;
+}
+
+.brand-text {
+  font-weight: 600;
+  font-size: 0.55em;
+  color: #b7c9d9;
+}
+
+.brand-text .dim { color: #6b7785; padding: 0 0.4em; }
+
+.title-slide h1.big-title {
+  color: #ffffff;
+  font-size: 1.5em;
+  line-height: 1.1;
+  margin: 0.1em 0;
+  font-weight: 700;
+}
+
+.title-slide h1.big-title.accent { color: var(--teal); }
+
+.title-slide .subtitle {
+  color: #d6e2ee;
+  font-size: 0.55em;
+  line-height: 1.5;
+  margin-top: 1.2em;
+  max-width: 90%;
+}
+
+.title-slide .footer-bar {
+  position: absolute;
+  bottom: 0.5em;
+  left: 0;
+  right: 0;
+  background: rgba(7, 20, 40, 0.65);
+  padding: 0.6em 1em;
+  font-size: 0.45em;
+  color: #9fb3c9;
+}
+
+.title-slide .footer-bar strong { color: #ffffff; }
+.title-slide .footer-sub { color: #7a8aa0; margin-top: 0.3em; font-size: 0.85em; }
+
+/* ---------- Layouts ----------------------------------------- */
+.two-col, .three-col, .grid-2x2, .hyp-grid {
+  display: grid;
+  gap: 0.6em;
+  margin-top: 0.3em;
+}
+
+.two-col { grid-template-columns: 1fr 1fr; }
+.three-col { grid-template-columns: 1fr 1fr 1fr; }
+.grid-2x2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.hyp-grid { grid-template-columns: 1fr 1fr; }
+
+/* ---------- Cards ------------------------------------------- */
+.card {
+  background: var(--bg-soft);
+  border: 0.5px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5em 0.7em 0.7em 0.7em;
+  font-size: 0.55em;
+  color: var(--slate);
+}
+
+.card-header {
+  font-weight: 700;
+  font-size: 0.95em;
+  padding: 0.2em 0.5em;
+  border-radius: 4px;
+  color: #ffffff;
+  display: inline-block;
+  margin-bottom: 0.5em;
+}
+
+.card-header.navy { background: var(--navy); }
+.card-header.teal { background: var(--teal); }
+.card-header.amber { background: var(--amber); }
+
+.card.novelty { position: relative; padding-top: 1.6em; }
+.card.novelty h3 {
+  margin: 0 0 0.3em 0;
+  font-size: 1.05em;
+  color: var(--navy);
+  line-height: 1.2;
+}
+.card.novelty p { font-size: 0.85em; line-height: 1.4; }
+
+.num-badge {
+  position: absolute;
+  top: 0.3em;
+  right: 0.6em;
+  width: 1.3em;
+  height: 1.3em;
+  background: var(--teal);
+  color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95em;
+}
+
+.card ul, .card ol {
+  margin: 0.2em 0 0 0;
+  padding-left: 1.1em;
+  display: block;
+}
+.card ul li { margin: 0.15em 0; line-height: 1.35; }
+
+.card .indent { margin-left: 1em; color: var(--muted); display: list-item; }
+.card .result { color: var(--red); font-weight: 600; }
+.card .tag { color: var(--muted); font-style: italic; margin: 0.2em 0 0.5em 0; font-size: 0.85em; }
+
+.dim { color: var(--muted); font-weight: 400; }
+
+/* ---------- Chips ------------------------------------------- */
+.chip {
+  display: inline-block;
+  padding: 0.05em 0.4em;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-weight: 600;
+  margin: 0 0.2em;
+}
+
+.chip.teal { background: var(--teal-soft); color: var(--teal); }
+.chip.amber { background: var(--amber-soft); color: var(--amber); }
+
+.routing-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25em;
+  margin-top: 0.5em;
+}
+
+.pill {
+  font-size: 0.85em;
+  padding: 0.1em 0.5em;
+  border-radius: 12px;
+  color: #ffffff;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pill.green { background: var(--green); }
+.pill.amber { background: var(--amber); }
+.pill.red { background: var(--red); }
+
+/* ---------- Figures ---------------------------------------- */
+.figure {
+  width: 100%;
+  height: auto;
+  max-height: 55vh;
+  margin: 0.3em 0;
+}
+
+/* ---------- Callout / Quote -------------------------------- */
+.callout {
+  background: var(--teal-soft);
+  border-left: 4px solid var(--teal);
+  padding: 0.6em 0.9em;
+  border-radius: 0 6px 6px 0;
+  margin: 0.3em 0 0.6em 0;
+  font-size: 0.55em;
+}
+
+.callout .quote {
+  font-size: 1em;
+  color: var(--navy);
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.quote-block {
+  background: var(--amber-soft);
+  border: 1px solid var(--amber);
+  border-radius: 8px;
+  padding: 0.7em 0.9em;
+  margin-bottom: 0.6em;
+}
+
+.quote-block .quote-tag {
+  font-size: 0.6em;
+  font-weight: 700;
+  color: var(--amber);
+  letter-spacing: 0.08em;
+  margin-bottom: 0.3em;
+}
+
+.quote-block p {
+  font-size: 0.7em;
+  color: var(--navy);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.quote-block .hl {
+  background: rgba(224, 142, 31, 0.18);
+  padding: 0 0.2em;
+}
+
+/* ---------- Comparison table ------------------------------- */
+.cmp-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.3em;
+  font-size: 0.45em;
+}
+
+.cmp-table th {
+  background: var(--navy);
+  color: #ffffff;
+  padding: 0.4em 0.6em;
+  text-align: left;
+  font-weight: 700;
+}
+
+.cmp-table td {
+  padding: 0.4em 0.6em;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  line-height: 1.35;
+}
+
+.cmp-table tbody tr:nth-child(odd) { background: var(--bg-soft); }
+
+/* ---------- Hypotheses grid -------------------------------- */
+.hyp { font-size: 0.55em; }
+
+.hyp-tag {
+  font-size: 1.1em;
+}
+
+.hyp-body {
+  font-size: 0.9em;
+  line-height: 1.4;
+}
+
+/* ---------- Papers list ------------------------------------ */
+.papers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45em;
+  font-size: 0.45em;
+}
+
+.papers li {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.45em 0.65em;
+  border-left: 3px solid var(--teal);
+  line-height: 1.35;
+}
+
+.papers li a { text-decoration: none; color: var(--navy); }
+.papers li a:hover { text-decoration: underline; }
+.papers li a strong { font-size: 1.05em; }
+.papers li .venue {
+  display: inline-block;
+  margin-left: 0.4em;
+  color: var(--teal);
+  font-weight: 600;
+  font-size: 0.9em;
+}
+.papers li p { margin: 0.3em 0 0.2em 0; color: var(--slate); font-size: 0.95em; }
+.papers li .ext {
+  font-size: 0.85em;
+  color: var(--teal);
+  font-family: ui-monospace, Menlo, monospace;
+  word-break: break-all;
+}
+
+/* ---------- Takeaways -------------------------------------- */
+.takeaways {
+  font-size: 0.6em;
+  padding-left: 1.4em;
+  display: block;
+}
+
+.takeaways li { margin: 0.4em 0; line-height: 1.4; }
+
+.thankyou {
+  margin-top: 1.2em;
+  padding: 0.7em 1em;
+  background: linear-gradient(135deg, var(--navy), var(--teal));
+  color: #ffffff;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 0.7em;
+  font-weight: 600;
+}

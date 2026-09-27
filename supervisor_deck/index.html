@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ConsiliumMD · CARMA · Supervisor Briefing</title>
+<meta name="description" content="Supervisor briefing for ConsiliumMD and the CARMA research core." />
+
+<!-- Reveal.js core theme + styles (CDN) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css" id="theme" />
+
+<!-- Local custom theme -->
+<link rel="stylesheet" href="theme.css" />
+
+<!-- Reveal.js core + plugins -->
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js" defer></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css" />
+</head>
+
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ============================================================== -->
+<!-- 1 · TITLE                                                       -->
+<!-- ============================================================== -->
+<section class="title-slide" data-background-gradient="linear-gradient(135deg, #0b1f3a 0%, #0e828a 100%)">
+  <div class="brand">
+    <div class="brand-mark">C</div>
+    <div class="brand-text">ConsiliumMD <span class="dim">·</span> powered by CARMA</div>
+  </div>
+
+  <h1 class="big-title">When guidelines&nbsp;disagree,</h1>
+  <h1 class="big-title accent">the right answer is rarely <em>“retrieve&nbsp;more.”</em></h1>
+
+  <p class="subtitle">
+    A decision-theoretic clinical AI that separates epistemic from normative conflict<br/>
+    and routes each conflict to the action that actually reduces decision error.
+  </p>
+
+  <div class="footer-bar">
+    <strong>Supervisor briefing</strong> · ConsiliumMD (product) + CARMA (research core)
+    <div class="footer-sub">
+      Read-only reference: <code>D:\Documents\HelloMed_X_CARMA\CARMA</code>
+      &nbsp;·&nbsp; Product source: <code>D:\Documents\HelloMed_X_CARMA\ConsiliumMD</code>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================== -->
+<!-- 2 · THE PROBLEM                                                 -->
+<!-- ============================================================== -->
+<section>
+  <h2>The problem with today’s clinical&nbsp;LLMs</h2>
+  <p class="lede">Guideline conflicts are everywhere — current systems handle them by guessing.</p>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-header navy">What clinicians actually see</div>
+      <ul>
+        <li><strong>Two guidelines disagree.</strong></li>
+        <li class="indent">BP target: ACC/AHA &lt;130/80, ESC &lt;140/90.</li>
+        <li class="indent">Opioid MME: CDC ≤50, some societies allow higher with risk–benefit discussion.</li>
+        <li><strong>The LLM retrieves more evidence, then picks one and writes it as a recommendation.</strong></li>
+        <li class="indent">It cannot tell you whether the disagreement is about the evidence or about the values being traded off.</li>
+        <li><strong>Worst case:</strong> it silently picks the higher-authority source and calls it “guideline-concordant.”</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header navy">Why “retrieve more” is the wrong reflex</div>
+      <ul>
+        <li>For <span class="chip teal">epistemic</span> conflicts (same evidence, different reading): more retrieval <em>can</em> resolve them if a published net-benefit model exists.</li>
+        <li>For <span class="chip amber">normative</span> conflicts (shared evidence, different value weights): more retrieval <em>cannot</em> resolve them — the evidence is already complete.</li>
+        <li>Yet today’s systems apply <strong>one uniform policy</strong>: retrieve, retrieve, retrieve.</li>
+        <li class="result">→ wasted compute, delayed answers, and wrong-action routings on the normative subset.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================== -->
+<!-- 3 · CORE INSIGHT — FIGURE                                       -->
+<!-- ============================================================== -->
+<section>
+  <h2>The core insight</h2>
+  <p class="lede">Not all conflicts are the same kind of problem.</p>
+
+  <!-- Inline SVG figure: two columns with arrows -->
+  <svg viewBox="0 0 1100 360" xmlns="http://www.w3.org/2000/svg" class="figure" aria-label="Epistemic vs normative conflict flow">
+    <defs>
+      <marker id="arr-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#0e828a"/>
+      </marker>
+      <marker id="arr-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#e08e1f"/>
+      </marker>
+    </defs>
+
+    <!-- Epistemic side -->
+    <rect x="20" y="40" width="240" height="120" rx="12" fill="#ecf7f8" stroke="#0e828a" stroke-width="2"/>
+    <text x="140" y="75" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-weight="700" font-size="18" fill="#0b1f3a">Epistemic conflict</text>
+    <text x="140" y="100" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#0b1f3a">Beliefs differ · values align</text>
+    <text x="140" y="130" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="12" fill="#33404f" font-style="italic">e.g. statin initiation — different</text>
+    <text x="140" y="146" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="12" fill="#33404f" font-style="italic">effect-size estimates</text>
+
+    <!-- Arrow -->
+    <line x1="270" y1="100" x2="380" y2="100" stroke="#0e828a" stroke-width="3" marker-end="url(#arr-teal)"/>
+    <text x="325" y="90" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="12" fill="#0e828a" font-weight="700">EVPI/EVSI</text>
+
+    <!-- Right action: epistemic -->
+    <rect x="390" y="40" width="240" height="120" rx="12" fill="#ffffff" stroke="#0e828a" stroke-width="2"/>
+    <text x="510" y="75" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-weight="700" font-size="18" fill="#0b1f3a">Right action</text>
+    <text x="510" y="105" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="14" fill="#0b1f3a">retrieve or escalate</text>
+    <text x="510" y="130" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#6b7785">only if expected value of</text>
+    <text x="510" y="146" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#6b7785">information is positive</text>
+
+    <!-- CARMA route label -->
+    <rect x="660" y="50" width="180" height="50" rx="25" fill="#0e828a"/>
+    <text x="750" y="82" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-weight="700" font-size="14" fill="#ffffff">CARMA → retrieve</text>
+    <path d="M640 130 Q700 200 760 130" fill="none" stroke="#0e828a" stroke-width="2" stroke-dasharray="4 4"/>
+    <circle cx="640" cy="130" r="4" fill="#0e828a"/>
+    <circle cx="760" cy="130" r="4" fill="#0e828a"/>
+
+    <!-- Normative side -->
+    <rect x="20" y="220" width="240" height="120" rx="12" fill="#fdf4e3" stroke="#e08e1f" stroke-width="2"/>
+    <text x="140" y="255" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-weight="700" font-size="18" fill="#0b1f3a">Normative conflict</text>
+    <text x="140" y="280" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#0b1f3a">Beliefs align · values differ</text>
+    <text x="140" y="310" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="12" fill="#33404f" font-style="italic">e.g. BP target — same trials,</text>
+    <text x="140" y="326" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="12" fill="#33404f" font-style="italic">different harm weights</text>
+
+    <!-- Arrow -->
+    <line x1="270" y1="280" x2="380" y2="280" stroke="#e08e1f" stroke-width="3" marker-end="url(#arr-amber)"/>
+    <text x="325" y="270" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="12" fill="#e08e1f" font-weight="700">surface</text>
+
+    <!-- Right action: normative -->
+    <rect x="390" y="220" width="240" height="120" rx="12" fill="#ffffff" stroke="#e08e1f" stroke-width="2"/>
+    <text x="510" y="255" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-weight="700" font-size="18" fill="#0b1f3a">Right action</text>
+    <text x="510" y="285" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="14" fill="#0b1f3a">elicit preference</text>
+    <text x="510" y="310" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#6b7785">present both positions,</text>
+    <text x="510" y="326" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#6b7785">let the patient decide</text>
+
+    <!-- CARMA route label -->
+    <rect x="660" y="230" width="180" height="50" rx="25" fill="#e08e1f"/>
+    <text x="750" y="262" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-weight="700" font-size="14" fill="#ffffff">CARMA → elicit</text>
+    <path d="M640 310 Q700 340 760 310" fill="none" stroke="#e08e1f" stroke-width="2" stroke-dasharray="4 4"/>
+    <circle cx="640" cy="310" r="4" fill="#e08e1f"/>
+    <circle cx="760" cy="310" r="4" fill="#e08e1f"/>
+
+    <!-- Bottom note -->
+    <text x="500" y="360" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#0b1f3a" font-weight="700">
+      Wrong action on the normative side: <tspan fill="#c0392b">retrieve more</tspan>.  Right action: <tspan fill="#16a34a">do less</tspan>.
+    </text>
+  </svg>
+</section>
+
+<!-- ============================================================== -->
+<!-- 4 · WHAT CARMA IS / ISN'T                                       -->
+<!-- ============================================================== -->
+<section>
+  <h2>What CARMA is — and&nbsp;isn’t</h2>
+  <p class="lede">Read-only reference at <code>D:\Documents\HelloMed_X_CARMA\CARMA</code></p>
+
+  <div class="callout">
+    <span class="quote">“A clinical-reasoning system that <strong>types each guideline conflict</strong> as epistemic or normative
+    <strong>before deciding what to do about it.</strong>”</span>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-header teal">What CARMA does</div>
+      <ul>
+        <li>Takes a clinical case + decision class (e.g. BP target, statin, anticoagulation in AF) + retrieved guideline sources.</li>
+        <li>Estimates each source’s <strong>beliefs</strong> and <strong>utility weights</strong> from the cited evidence — not from self-reported confidence.</li>
+        <li>Returns a <code>RoutingDecision ∈ {answer, retrieve, elicit, escalate}</code> with a transparent, auditable trail.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header amber">What CARMA does not do</div>
+      <ul>
+        <li>It is <strong>not</strong> a chatbot and not a generic RAG wrapper.</li>
+        <li>It does <strong>not</strong> treat every conflict the same way — uniform “retrieve more” is the baseline it is designed to beat.</li>
+        <li>It does <strong>not</strong> silently pick a higher-authority guideline. Normative conflicts are surfaced, not resolved by authority.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================== -->
+<!-- 5 · WHAT'S GENUINELY NOVEL                                      -->
+<!-- ============================================================== -->
+<section>
+  <h2>What’s genuinely novel about&nbsp;CARMA</h2>
+  <p class="lede">Four claims the paper stakes out — each testable, each falsifiable.</p>
+
+  <div class="grid-2x2">
+    <div class="card novelty">
+      <div class="num-badge">★</div>
+      <h3>Revealed-Preference Decomposition (RPD)</h3>
+      <p>Each guideline is modeled as solving a personal utility problem over a shared belief. Where sources cite overlapping evidence, RPD <strong>inverts their numeric thresholds</strong> to recover their implicit harm-vs-benefit weights. This separates the two kinds of conflict from observables alone.</p>
+    </div>
+
+    <div class="card novelty">
+      <div class="num-badge">★</div>
+      <h3>A provable identifiability boundary</h3>
+      <p>RPD is not a heuristic: Claim 1 (identifiable regime) and Claim 2 (impossibility result) are <strong>formal</strong>. If sources cite disjoint evidence on non-comparable metrics, the decomposition is observationally equivalent and cannot be recovered — a stated limit, not an engineering gap.</p>
+    </div>
+
+    <div class="card novelty">
+      <div class="num-badge">★</div>
+      <h3>Gated routing on conflict type</h3>
+      <p>CARMA runs <strong>EVPI/EVSI</strong> on the epistemic branch and a <strong>preference-elicitation</strong> step on the normative branch. Uniform EVPI on all conflicts (Baseline B3) is the comparison the paper is built to <em>lose to</em> — specifically on the normative subset.</p>
+    </div>
+
+    <div class="card novelty">
+      <div class="num-badge">★</div>
+      <h3>A type-labeled benchmark (CECB-T)</h3>
+      <p>Rather than scaling up an existing benchmark, CARMA contributes a small (150–250 case), clinician-validated benchmark that labels each case as <strong>epistemic, normative, or mixed/non-identifiable</strong>. Cohen’s κ on type labels is reported.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================== -->
+<!-- 6 · HOW IT DIFFERS — COMPARISON TABLE                           -->
+<!-- ============================================================== -->
+<section>
+  <h2>Why this is different from prior&nbsp;work</h2>
+  <p class="lede">CARMA names a blind spot in a high-profile, active research thread.</p>
+
+  <table class="cmp-table">
+    <thead>
+      <tr>
+        <th style="width:24%">Existing system</th>
+        <th style="width:38%">How it handles a conflict</th>
+        <th style="width:38%">Where CARMA differs</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>MDAgents</strong><br/><span class="dim">NeurIPS 2024</span></td>
+        <td>Routes by task complexity. Multi-agent collaboration for “hard” cases.</td>
+        <td>Complexity ≠ conflict type. A normative conflict can be “easy” to phrase but unresolvable by retrieval.</td>
+      </tr>
+      <tr>
+        <td><strong>Generic RAG + heuristics</strong></td>
+        <td>Concatenates, ranks, or picks top-k. Resolution = which chunk wins.</td>
+        <td>Heuristics are surface-level. CARMA classifies the <em>structure</em> of the disagreement.</td>
+      </tr>
+      <tr>
+        <td><strong>VoI-gated LLM agents</strong><br/><span class="dim">e.g. SAGE-Agent</span></td>
+        <td>Apply one expected-value policy to every ambiguity. Assume more info is always better.</td>
+        <td>That assumption <em>fails on normative conflicts</em> — more retrieval has zero expected value when evidence is already complete. CARMA’s contribution is precisely this distinction.</td>
+      </tr>
+      <tr>
+        <td><strong>Self-confidence / self-correction</strong><br/><span class="dim">Huang et al., ICLR 2024</span></td>
+        <td>Trust the model’s stated confidence; iterate to “fix” wrong answers.</td>
+        <td>LLMs cannot self-correct without external feedback. CARMA replaces self-report with a formal estimator over the cited evidence.</td>
+      </tr>
+      <tr>
+        <td><strong>Higher-authority tie-breaking</strong></td>
+        <td>When sources disagree, pick the more prestigious body.</td>
+        <td>Silently authoritative. CARMA refuses — normative conflicts are surfaced to the clinician <em>and</em> the patient.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================== -->
+<!-- 7 · SYSTEM ARCHITECTURE — FIGURE                                -->
+<!-- ============================================================== -->
+<section>
+  <h2>System architecture</h2>
+  <p class="lede">From clinical case to routed action — with an audit trail at every step.</p>
+
+  <!-- Pipeline SVG -->
+  <svg viewBox="0 0 1180 220" xmlns="http://www.w3.org/2000/svg" class="figure" aria-label="CARMA system architecture pipeline">
+    <defs>
+      <marker id="arr-pipe" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#0b1f3a"/>
+      </marker>
+    </defs>
+
+    <!-- 6 stages -->
+    <g font-family="Inter, system-ui, sans-serif">
+      <g transform="translate(20,60)">
+        <rect width="170" height="110" rx="10" fill="#f6f8fb" stroke="#cbd3dd"/>
+        <rect width="170" height="34" rx="10" fill="#0b1f3a"/>
+        <text x="85" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">1 · Retriever</text>
+        <text x="10" y="58" font-size="11" fill="#33404f">Multi-source guideline +</text>
+        <text x="10" y="74" font-size="11" fill="#33404f">evidence retrieval.</text>
+        <text x="10" y="94" font-size="10" fill="#6b7785">authority · GRADE · year</text>
+      </g>
+
+      <g transform="translate(210,60)">
+        <rect width="170" height="110" rx="10" fill="#f6f8fb" stroke="#cbd3dd"/>
+        <rect width="170" height="34" rx="10" fill="#0b1f3a"/>
+        <text x="85" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">2 · Conflict detector</text>
+        <text x="10" y="58" font-size="11" fill="#33404f">Pairwise conflict</text>
+        <text x="10" y="74" font-size="11" fill="#33404f">identification.</text>
+        <text x="10" y="94" font-size="10" fill="#6b7785">candidate conflicts</text>
+      </g>
+
+      <g transform="translate(400,60)">
+        <rect width="170" height="110" rx="10" fill="#ecf7f8" stroke="#0e828a" stroke-width="2"/>
+        <rect width="170" height="34" rx="10" fill="#0e828a"/>
+        <text x="85" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">★ 3 · RPD classifier</text>
+        <text x="10" y="58" font-size="11" fill="#33404f">Estimates beliefs (θ̂) and</text>
+        <text x="10" y="74" font-size="11" fill="#33404f">utility weights (ŵ).</text>
+        <text x="10" y="94" font-size="10" fill="#0e828a" font-weight="700">epistemic · normative · mixed</text>
+      </g>
+
+      <g transform="translate(590,60)">
+        <rect width="170" height="110" rx="10" fill="#fdf4e3" stroke="#e08e1f" stroke-width="2"/>
+        <rect width="170" height="34" rx="10" fill="#e08e1f"/>
+        <text x="85" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">★ 4 · Branch router</text>
+        <text x="10" y="58" font-size="11" fill="#33404f">EPI → EVPI/EVSI gate</text>
+        <text x="10" y="74" font-size="11" fill="#33404f">NOR → elicit · MIX → escalate</text>
+        <text x="10" y="94" font-size="10" fill="#e08e1f" font-weight="700">safe default: escalate</text>
+      </g>
+
+      <g transform="translate(780,60)">
+        <rect width="170" height="110" rx="10" fill="#f6f8fb" stroke="#cbd3dd"/>
+        <rect width="170" height="34" rx="10" fill="#0b1f3a"/>
+        <text x="85" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">5 · Safety auditor</text>
+        <text x="10" y="58" font-size="11" fill="#33404f">Post-synthesis verification.</text>
+        <text x="10" y="74" font-size="11" fill="#33404f">Returns pass / warn / block.</text>
+      </g>
+
+      <g transform="translate(970,60)">
+        <rect width="190" height="110" rx="10" fill="#f6f8fb" stroke="#cbd3dd"/>
+        <rect width="190" height="34" rx="10" fill="#0b1f3a"/>
+        <text x="95" y="22" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">6 · Auditable output</text>
+        <text x="10" y="58" font-size="11" fill="#33404f">RoutingDecision + trail +</text>
+        <text x="10" y="74" font-size="11" fill="#33404f">evidence + elicitation.</text>
+        <text x="10" y="94" font-size="10" fill="#16a34a" font-weight="700">append-only audit</text>
+      </g>
+    </g>
+
+    <!-- arrows between stages -->
+    <g stroke="#0b1f3a" stroke-width="2" fill="none" marker-end="url(#arr-pipe)">
+      <line x1="195" y1="115" x2="208" y2="115"/>
+      <line x1="385" y1="115" x2="398" y2="115"/>
+      <line x1="575" y1="115" x2="588" y2="115"/>
+      <line x1="765" y1="115" x2="778" y2="115"/>
+      <line x1="955" y1="115" x2="968" y2="115"/>
+    </g>
+
+    <!-- legend -->
+    <g font-family="Inter, system-ui, sans-serif" font-size="11">
+      <rect x="20" y="190" width="14" height="14" fill="#0e828a"/>
+      <text x="40" y="201" fill="#33404f">CARMA contribution</text>
+      <rect x="220" y="190" width="14" height="14" fill="#e08e1f"/>
+      <text x="240" y="201" fill="#33404f">CARMA contribution</text>
+    </g>
+  </svg>
+
+  <div class="card" style="margin-top: 0.6em;">
+    <div class="card-header teal">Where ConsiliumMD wraps CARMA</div>
+    <ul>
+      <li>ConsiliumMD owns auth, RBAC, patient/case data, and the human-in-the-loop review queue.</li>
+      <li>CARMA is invoked as a reasoning provider behind a clean adapter (<code>RoutingDecision</code>, <code>ConflictContingentExplanation</code>, <code>SafetyAuditResult</code>).</li>
+      <li>Every routing → <code>ReasoningSnapshot</code> · every action → <code>ActionLog</code> · every event → append-only <code>AuditEvent</code>.</li>
+      <li>Out-of-MVP-scope classes (<code>opioid_threshold</code>, <code>eol_care_intensity</code>) blocked at the API with HTTP 409 — no unvalidated coverage.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================== -->
+<!-- 8 · CONSILIUMMD SURFACE — 3 COLS                                -->
+<!-- ============================================================== -->
+<section>
+  <h2>ConsiliumMD — the clinical product&nbsp;surface</h2>
+  <p class="lede">Built at <code>D:\Documents\HelloMed_X_CARMA\ConsiliumMD</code></p>
+
+  <div class="three-col">
+    <div class="card">
+      <div class="card-header teal">Doctor</div>
+      <p class="tag">Dashboard, case detail, recommendation card.</p>
+      <ul>
+        <li>Open a case for a patient and submit a recommendation request.</li>
+        <li>Receive a recommendation with a routing label.</li>
+        <li>See the tradeoff statement and elicitation question.</li>
+        <li>Decide: accept, modify, or escalate.</li>
+      </ul>
+      <div class="routing-pills">
+        <span class="pill green">Evidence gap resolved</span>
+        <span class="pill amber">Evidence gap checking</span>
+        <span class="pill amber">Judgment call</span>
+        <span class="pill red">Under review</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header amber">Senior reviewer</div>
+      <p class="tag">Reviewer queue + case view; the human-in-the-loop.</p>
+      <ul>
+        <li>See every case flagged <code>escalate</code> or <code>elicit_pending</code> in one queue.</li>
+        <li>Inspect reasoning trail, evidence citations, elicitation response.</li>
+        <li>Sign off, override, or request more evidence.</li>
+        <li>Decisions recorded against the original reasoning snapshot.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header navy">Admin / ethics</div>
+      <p class="tag">Users, decision-class scope, model versions, audit log.</p>
+      <ul>
+        <li>Manage users and assign roles (doctor / senior_reviewer / admin / ethics_committee).</li>
+        <li>Toggle decision classes in/out of scope; require ethics review per class.</li>
+        <li>Register model versions; each snapshot records which model produced it.</li>
+        <li>Append-only audit log (DB-trigger enforced).</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================== -->
+<!-- 9 · DATA MODEL — ER FIGURE                                     -->
+<!-- ============================================================== -->
+<section>
+  <h2>Data model — the audit trail is the&nbsp;product</h2>
+  <p class="lede">Every routing is replayable, every action attributable.</p>
+
+  <!-- ER-style SVG -->
+  <svg viewBox="0 0 1180 460" xmlns="http://www.w3.org/2000/svg" class="figure" aria-label="Entity relationship diagram">
+    <defs>
+      <style>
+        .entity-rect { fill: #ffffff; stroke: #0b1f3a; stroke-width: 1.2; }
+        .entity-title { fill: #0b1f3a; }
+        .entity-field { fill: #33404f; font-family: ui-monospace, Menlo, monospace; font-size: 10px; }
+        .rel { stroke: #6b7785; stroke-width: 1; fill: none; }
+      </style>
+    </defs>
+
+    <!-- entities -->
+    <g class="entity">
+      <rect x="40" y="40" width="180" height="78" rx="6" class="entity-rect"/>
+      <rect x="40" y="40" width="180" height="22" rx="6" fill="#0b1f3a"/>
+      <text x="130" y="56" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="700" fill="#ffffff">Patient</text>
+      <text x="50" y="78" class="entity-field">id</text>
+      <text x="50" y="92" class="entity-field">demographics</text>
+      <text x="50" y="106" class="entity-field">conditions · meds · allergies</text>
+    </g>
+
+    <g class="entity">
+      <rect x="280" y="40" width="180" height="92" rx="6" class="entity-rect"/>
+      <rect x="280" y="40" width="180" height="22" rx="6" fill="#0b1f3a"/>
+      <text x="370" y="56" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="700" fill="#ffffff">ClinicalCase</text>
+      <text x="290" y="78" class="entity-field">id</text>
+      <text x="290" y="92" class="entity-field">decision_class</text>
+      <text x="290" y="106" class="entity-field">status (open / closed)</text>
+      <text x="290" y="120" class="entity-field">senior_reviewer_id</text>
+    </g>
+
+    <g class="entity">
+      <rect x="520" y="40" width="200" height="92" rx="6" class="entity-rect"/>
+      <rect x="520" y="40" width="200" height="22" rx="6" fill="#0b1f3a"/>
+      <text x="620" y="56" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="700" fill="#ffffff">Recommendation</text>
+      <text x="530" y="78" class="entity-field">id</text>
+      <text x="530" y="92" class="entity-field">state (state machine)</text>
+      <text x="530" y="106" class="entity-field">latest_snapshot_id</text>
+      <text x="530" y="120" class="entity-field">final_recommendation_text</text>
+    </g>
+
+    <g class="entity">
+      <rect x="780" y="40" width="260" height="156" rx="6" class="entity-rect"/>
+      <rect x="780" y="40" width="260" height="22" rx="6" fill="#0e828a"/>
+      <text x="910" y="56" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="700" fill="#ffffff">ReasoningSnapshot ★</text>
+      <text x="790" y="78" class="entity-field">routing_decision ∈</text>
+      <text x="790" y="92" class="entity-field">  {answer, retrieve, elicit, escalate}</text>
+      <text x="790" y="106" class="entity-field">conflict_label ∈ 4 values</text>
+      <text x="790" y="120" class="entity-field">confidence · safety_verdict</text>
+      <text x="790" y="134" class="entity-field">model_version_id</text>
+      <text x="790" y="148" class="entity-field">reasoning_trail_json</text>
+      <text x="790" y="162" class="entity-field">latency_ms · tradeoff_statement</text>
+      <text x="790" y="178" class="entity-field">★ conflict-type labelling</text>
+    </g>
+
+    <g class="entity">
+      <rect x="780" y="200" width="200" height="92" rx="6" class="entity-rect"/>
+      <rect x="780" y="200" width="200" height="22" rx="6" fill="#0b1f3a"/>
+      <text x="880" y="216" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="700" fill="#ffffff">EvidenceCitation</text>
+      <text x="790" y="238" class="entity-field">source_body · grade</text>
+      <text x="790" y="252" class="entity-field">relevance · quality</text>
+      <text x="790" y="266" class="entity-field">excerpt</text>
+      <text x="790" y="280" class="entity-field">study_design</text>
+    </g>
+
+    <g class="entity">
+      <rect x="520" y="200" width="200" height="78" rx="6" class="entity-rect"/>
+      <rect x="520" y="200" width="200" height="22" rx="6" fill="#0b1f3a"/>
+      <text x="620" y="216" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="700" fill="#ffffff">ActionLog</text>
+      <text x="530" y="238" class="entity-field">actor_user_id</text>
+      <text x="530" y="252" class="entity-field">action · payload_json</text>
+      <text x="530" y="266" class="entity-field">rationale</text>
+    </g>
+
+    <g class="entity">
+      <rect x="280" y="200" width="180" height="78" rx="6" class="entity-rect"/>
+      <rect x="280" y="200" width="180" height="22" rx="6" fill="#0b1f3a"/>
+      <text x="370" y="216" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="700" fill="#ffffff">Elicitation</text>
+      <text x="290" y="238" class="entity-field">presented_options_json</text>
+      <text x="290" y="252" class="entity-field">selected_option_id</text>
+      <text x="290" y="266" class="entity-field">free_text_response</text>
+    </g>
+
+    <g class="entity">
+      <rect x="280" y="320" width="180" height="78" rx="6" class="entity-rect"/>
+      <rect x="280" y="320" width="180" height="22" rx="6" fill="#0b1f3a"/>
+      <text x="370" y="336" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="700" fill="#ffffff">ModelVersion</text>
+      <text x="290" y="358" class="entity-field">id</text>
+      <text x="290" y="372" class="entity-field">registered_at</text>
+      <text x="290" y="386" class="entity-field">provider · config_hash</text>
+    </g>
+
+    <g class="entity">
+      <rect x="520" y="320" width="200" height="78" rx="6" class="entity-rect"/>
+      <rect x="520" y="320" width="200" height="22" rx="6" fill="#c0392b"/>
+      <text x="620" y="336" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="700" fill="#ffffff">AuditEvent (append-only)</text>
+      <text x="530" y="358" class="entity-field">actor · event_type</text>
+      <text x="530" y="372" class="entity-field">payload_json</text>
+      <text x="530" y="386" class="entity-field">DB trigger enforces</text>
+    </g>
+
+    <!-- relationships -->
+    <g class="rel">
+      <line x1="220" y1="86" x2="280" y2="86"/>
+      <line x1="460" y1="86" x2="520" y2="86"/>
+      <line x1="720" y1="86" x2="780" y2="86"/>
+      <line x1="890" y1="170" x2="890" y2="200"/>
+      <line x1="720" y1="240" x2="520" y2="240"/>
+      <line x1="520" y1="170" x2="460" y2="240"/>
+      <line x1="460" y1="240" x2="280" y2="240"/>
+      <line x1="370" y1="280" x2="370" y2="320"/>
+      <line x1="720" y1="358" x2="520" y2="358"/>
+    </g>
+
+    <!-- relationship labels -->
+    <g font-family="Inter, system-ui, sans-serif" font-size="10" fill="#6b7785">
+      <text x="250" y="80">has</text>
+      <text x="490" y="80">yields</text>
+      <text x="750" y="80">latest→</text>
+      <text x="900" y="190">cites</text>
+      <text x="615" y="232">records</text>
+      <text x="485" y="200">for</text>
+      <text x="365" y="232">answer</text>
+    </g>
+  </svg>
+
+  <div class="card" style="margin-top:0.4em;">
+    <div class="card-header navy">Invariants the schema enforces</div>
+    <ul>
+      <li><strong>Recommendation state machine</strong>: pending → answered / retrieved / elicit_pending / escalated / closed.</li>
+      <li><strong>Model version pinning</strong>: every snapshot records the model_version_id — old cases stay interpretable when models change.</li>
+      <li><strong>Evidence lives under snapshots</strong> — citations cannot float free.</li>
+      <li><strong>AuditEvent is append-only</strong>: DB trigger raises on any UPDATE or DELETE.</li>
+      <li><strong>DecisionClassScope</strong> is the single gate: unknown or out-of-scope classes fail with HTTP 409.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================== -->
+<!-- 10 · THE PAPER'S CENTRAL CLAIM                                  -->
+<!-- ============================================================== -->
+<section>
+  <h2>The paper’s central&nbsp;claim</h2>
+  <p class="lede">The result it has to deliver.</p>
+
+  <div class="quote-block">
+    <div class="quote-tag">THE RESULT THE PAPER HAS TO DELIVER</div>
+    <p>Baseline B3 (uniform EVPI on every conflict) is measurably worse than CARMA
+    on the <strong>normative subset</strong> — while performing comparably on the epistemic subset.
+    <span class="hl">That gap is the contribution.</span></p>
+  </div>
+
+  <div class="hyp-grid">
+    <div class="hyp"><div class="hyp-tag">H1</div><div class="hyp-body">RPD correctly classifies conflict type for ≥80% of identifiable-regime cases and correctly flags ≥70% of non-identifiable cases as such.</div></div>
+    <div class="hyp"><div class="hyp-tag">H2</div><div class="hyp-body">Uniform EVPI (B3) is measurably worse than the full system on the normative subset — wasted retrieval, delayed answers, wrong-tradeoff recommendations — while comparable on the epistemic subset.</div></div>
+    <div class="hyp"><div class="hyp-tag">H3</div><div class="hyp-body">The preference-elicitation branch produces higher clinician-rated appropriateness on normative conflicts than retrieval-based resolution.</div></div>
+    <div class="hyp"><div class="hyp-tag">H4</div><div class="hyp-body">Gated routing produces ≥15% fewer wrong-action routings than any single-policy baseline.</div></div>
+  </div>
+</section>
+
+<!-- ============================================================== -->
+<!-- 11 · EVALUATION — FIGURE                                        -->
+<!-- ============================================================== -->
+<section>
+  <h2>How we evaluate it</h2>
+  <p class="lede">Four baselines, four ablations, seven metrics, type-labeled benchmark.</p>
+
+  <div class="three-col">
+    <div class="card">
+      <div class="card-header teal">Baselines (4)</div>
+      <ul>
+        <li><span class="chip teal">B1</span> LLM self-reported confidence.</li>
+        <li><span class="chip teal">B2</span> Evidence-concordance-only / old ECL.</li>
+        <li><span class="chip teal">B3</span> <strong>Uniform EVPI on every conflict</strong> (the key comparison).</li>
+        <li><span class="chip teal">B4</span> MDAgents complexity routing.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header amber">Ablations (4)</div>
+      <ul>
+        <li><span class="chip amber">A1</span> Remove classifier (collapses to B3).</li>
+        <li><span class="chip amber">A2</span> Remove preference elicitation (normative → retrieval).</li>
+        <li><span class="chip amber">A3</span> EVSI vs. blind top-k retrieval.</li>
+        <li><span class="chip amber">A4</span> Heuristic vs. RPD classifier.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header navy">Metrics (7)</div>
+      <ul>
+        <li>Routing accuracy</li>
+        <li>Wasted-retrieval rate</li>
+        <li>EVPI/EVSI calibration</li>
+        <li>Clinician-rated appropriateness (Likert 1–7)</li>
+        <li>Cost (LLM calls + latency / path)</li>
+        <li>RPD recovery accuracy (synthetic)</li>
+        <li>RPD–clinician agreement (Cohen’s κ)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Bar chart: H2 expected result, visual -->
+  <svg viewBox="0 0 900 280" xmlns="http://www.w3.org/2000/svg" class="figure" aria-label="Expected H2 result visualisation">
+    <g font-family="Inter, system-ui, sans-serif">
+      <text x="30" y="24" font-size="14" font-weight="700" fill="#0b1f3a">Expected H2 result — wrong-action rate (lower is better)</text>
+
+      <!-- X-axis baseline (at y=240) -->
+      <line x1="80" y1="50" x2="80" y2="240" stroke="#cbd3dd"/>
+      <line x1="80" y1="240" x2="860" y2="240" stroke="#cbd3dd"/>
+
+      <!-- ========== Epistemic subset (top row label, bars near bottom) ========== -->
+      <text x="80" y="65" font-size="12" font-weight="700" fill="#33404f">Epistemic subset</text>
+      <rect x="240" y="160" width="80" height="80" fill="#0e828a"/>
+      <text x="280" y="155" text-anchor="middle" font-size="12" font-weight="700" fill="#0e828a">CARMA</text>
+      <text x="280" y="205" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">~18%</text>
+
+      <rect x="340" y="155" width="80" height="85" fill="#6b7785"/>
+      <text x="380" y="150" text-anchor="middle" font-size="12" font-weight="700" fill="#6b7785">B3 uniform</text>
+      <text x="380" y="205" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">~19%</text>
+
+      <text x="490" y="205" font-size="11" fill="#16a34a" font-weight="700">↔ comparable</text>
+
+      <!-- ========== Normative subset (label below baseline, bars taller = worse) ========== -->
+      <text x="80" y="270" font-size="12" font-weight="700" fill="#33404f">Normative subset</text>
+      <rect x="240" y="120" width="80" height="120" fill="#0e828a"/>
+      <text x="280" y="115" text-anchor="middle" font-size="12" font-weight="700" fill="#0e828a">CARMA</text>
+      <text x="280" y="190" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">~17%</text>
+
+      <rect x="340" y="105" width="80" height="135" fill="#c0392b"/>
+      <text x="380" y="100" text-anchor="middle" font-size="12" font-weight="700" fill="#c0392b">B3 uniform</text>
+      <text x="380" y="185" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">~31%</text>
+
+      <text x="490" y="170" font-size="11" fill="#c0392b" font-weight="700">↗ wrong-action rate spikes</text>
+    </g>
+  </svg>
+</section>
+
+<!-- ============================================================== -->
+<!-- 12 · 10 RELATED PAPERS                                          -->
+<!-- ============================================================== -->
+<section>
+  <h2>10 recent, high-impact related papers</h2>
+  <p class="lede">All linked · spanning clinical LLM, RAG conflict, decision-theoretic AI.</p>
+
+  <ol class="papers">
+    <li>
+      <a href="https://arxiv.org/abs/2404.15155" target="_blank" rel="noopener">
+        <strong>Kim et al., 2024 — MDAgents</strong>
+      </a>
+      <span class="venue">NeurIPS 2024 (Oral)</span>
+      <p>Multi-agent LLM collaboration for medical decision-making, routed by task complexity.</p>
+      <a class="ext" href="https://arxiv.org/abs/2404.15155" target="_blank" rel="noopener">arxiv.org/abs/2404.15155 ↗</a>
+    </li>
+
+    <li>
+      <a href="https://arxiv.org/abs/2310.01798" target="_blank" rel="noopener">
+        <strong>Huang et al., 2024 — LLMs cannot self-correct reasoning</strong>
+      </a>
+      <span class="venue">ICLR 2024</span>
+      <p>Empirical evidence that intrinsic self-correction degrades reasoning without external feedback — the motivation for replacing self-report with RPD.</p>
+      <a class="ext" href="https://arxiv.org/abs/2310.01798" target="_blank" rel="noopener">arxiv.org/abs/2310.01798 ↗</a>
+    </li>
+
+    <li>
+      <a href="https://arxiv.org/abs/2311.16452" target="_blank" rel="noopener">
+        <strong>Nori et al., 2023 — Medprompt</strong>
+      </a>
+      <span class="venue">Microsoft Research</span>
+      <p>Few-shot + ensembling strategies that lift GPT-4 on MedQA-class benchmarks — the empirical ceiling CARMA must clear.</p>
+      <a class="ext" href="https://arxiv.org/abs/2311.16452" target="_blank" rel="noopener">arxiv.org/abs/2311.16452 ↗</a>
+    </li>
+
+    <li>
+      <a href="https://arxiv.org/abs/2410.07176" target="_blank" rel="noopener">
+        <strong>Wang et al., 2025 — Astute RAG</strong>
+      </a>
+      <span class="venue">ACL 2025</span>
+      <p>Resilient RAG that adaptively consolidates internal vs. external knowledge with source-awareness — surfaces the same knowledge-conflict problem CARMA formalizes.</p>
+      <a class="ext" href="https://arxiv.org/abs/2410.07176" target="_blank" rel="noopener">arxiv.org/abs/2410.07176 ↗</a>
+    </li>
+
+    <li>
+      <a href="https://arxiv.org/abs/2506.05278" target="_blank" rel="noopener">
+        <strong>Huo et al., 2025 — Micro-Act</strong>
+      </a>
+      <span class="venue">ACL 2025</span>
+      <p>Mitigating knowledge conflict in RAG via actionable self-reasoning — treats conflict as the central pathology, not a side effect.</p>
+      <a class="ext" href="https://arxiv.org/abs/2506.05278" target="_blank" rel="noopener">arxiv.org/abs/2506.05278 ↗</a>
+    </li>
+
+    <li>
+      <a href="https://arxiv.org/abs/2410.15737" target="_blank" rel="noopener">
+        <strong>Pham et al., 2024 — WhoQA</strong>
+      </a>
+      <span class="venue">EMNLP Findings 2024</span>
+      <p>Benchmark showing LLMs silently degrade under knowledge conflicts — the empirical case for surfacing rather than resolving.</p>
+      <a class="ext" href="https://arxiv.org/abs/2410.15737" target="_blank" rel="noopener">arxiv.org/abs/2410.15737 ↗</a>
+    </li>
+
+    <li>
+      <a href="https://arxiv.org/abs/2505.21503" target="_blank" rel="noopener">
+        <strong>Wang et al., 2025 — Catfish Agent</strong>
+      </a>
+      <span class="venue">arXiv 2025</span>
+      <p>Clinical multi-agent LLM that injects structured dissent to break silent agreement — independent confirmation that “all agents agree” is a failure mode.</p>
+      <a class="ext" href="https://arxiv.org/abs/2505.21503" target="_blank" rel="noopener">arxiv.org/abs/2505.21503 ↗</a>
+    </li>
+
+    <li>
+      <a href="https://arxiv.org/abs/2403.06294" target="_blank" rel="noopener">
+        <strong>Hong et al., 2024 — ArgMed-Agents</strong>
+      </a>
+      <span class="venue">arXiv 2024</span>
+      <p>Multi-agent clinical reasoning via argumentation schemes with a symbolic solver — the explainability direction CARMA extends with conflict-type labels.</p>
+      <a class="ext" href="https://arxiv.org/abs/2403.06294" target="_blank" rel="noopener">arxiv.org/abs/2403.06294 ↗</a>
+    </li>
+
+    <li>
+      <a href="https://arxiv.org/abs/2511.08798" target="_blank" rel="noopener">
+        <strong>Suri et al., 2025 — SAGE-Agent</strong>
+      </a>
+      <span class="venue">arXiv 2025 · the closest active thread</span>
+      <p>Applies EVPI to ambiguity resolution in tool-calling LLM agents — the high-profile research line CARMA identifies a blind spot in (it fails on normative conflicts).</p>
+      <a class="ext" href="https://arxiv.org/abs/2511.08798" target="_blank" rel="noopener">arxiv.org/abs/2511.08798 ↗</a>
+    </li>
+
+    <li>
+      <a href="https://arxiv.org/abs/2606.07071" target="_blank" rel="noopener">
+        <strong>Fletcher &amp; Stevenson, 2026 — Decision-Theoretic Stopping Rules</strong>
+      </a>
+      <span class="venue">arXiv 2026</span>
+      <p>EVPI-based stopping policies for medical systematic review — a recent instance of decision-theoretic machinery applied to clinical knowledge work.</p>
+      <a class="ext" href="https://arxiv.org/abs/2606.07071" target="_blank" rel="noopener">arxiv.org/abs/2606.07071 ↗</a>
+    </li>
+  </ol>
+</section>
+
+<!-- ============================================================== -->
+<!-- 13 · TAKEAWAYS                                                 -->
+<!-- ============================================================== -->
+<section>
+  <h2>Takeaways</h2>
+  <p class="lede">What we want the supervisor to walk away with.</p>
+
+  <ol class="takeaways">
+    <li><strong>CARMA names a real blind spot.</strong> VoI-based / “retrieve more” policies fail on normative conflicts. The paper formalizes the distinction and proves an identifiability boundary.</li>
+    <li><strong>It contributes something the field does not have.</strong> A small, clinician-validated, type-labeled benchmark (CECB-T). The contribution is the decision-theoretic design, not dataset size.</li>
+    <li><strong>It is a testable, falsifiable claim.</strong> H2 (uniform EVPI loses on the normative subset) is the result the paper is built to deliver. Four baselines × four ablations × seven metrics, paired bootstrap.</li>
+    <li><strong>ConsiliumMD already exists as a working product surface.</strong> Auth, RBAC, decision-class scope, audit trail, reviewer queue, model-versioning — all wired. CARMA plugs in as a reasoning provider behind a clean adapter.</li>
+    <li><strong>What we need now.</strong> Sign-off to run the formal RPD evaluation on CECB-T against B1–B4, and clinical collaborators for the type-label validation pass.</li>
+  </ol>
+
+  <div class="thankyou">
+    Thank you — questions welcome.
+  </div>
+</section>
+
+</div><!-- /slides -->
+</div><!-- /reveal -->
+
+<script defer>
+// Init reveal once its scripts are loaded. Defer-loaded scripts on the page
+// expose Reveal/RevealNotes/RevealHighlight. Because this script is also
+// `defer`, it executes after them in document order.
+function initReveal() {
+  try {
+    if (typeof Reveal === 'undefined') { console.error('Reveal not loaded'); return; }
+    const deck = new Reveal({
+      hash: true,
+      controls: true,
+      progress: true,
+      slideNumber: 'c/t',
+      width: 1280,
+      height: 720,
+      margin: 0.08,
+      plugins: [RevealNotes, RevealHighlight]
+    });
+    const r = deck.initialize();
+    if (r && typeof r.catch === 'function') r.catch(e => console.error('Reveal init failed:', e));
+  } catch (e) {
+    console.error('Reveal init threw:', e);
+  }
+}
+initReveal();
+</script>
+
+</body>
+</html>
