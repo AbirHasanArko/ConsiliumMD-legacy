@@ -48,7 +48,13 @@ ConsiliumMD acts as the orchestrator. Extracted multi-modal data is structured i
 - **ECL Collapse / Unsafe Bounds:** If the Evidential Conflict Landscape graph is completely disconnected, ConsiliumMD triggers the **`Escalate` State**, safely bypassing the AI and routing to a human senior reviewer.
 - **Consensus:** Triggers the **`Answer` State** with a standard recommendation card.
 
-### 3.5 VRAM Orchestration (Consumer Hardware Constraint)
+### 3.5 Data Privacy & HIPAA/GDPR Compliance Pipeline
+To ensure deployability in highly regulated clinical environments, ConsiliumMD enforces strict data boundaries:
+- **Pre-LLM PHI Scrubbing (Anonymization Gateway)**: Before any patient context is sent to the CARMA engine, it passes through a local NLP scrubbing layer (e.g., Microsoft Presidio). All Protected Health Information (PHI) like names, SSNs, and birthdates are replaced with generic tokens (e.g., `[PATIENT_A]`, `[AGE_65]`). The LLM never sees identifying data.
+- **Encryption**: The PostgreSQL database encrypts all records at rest (AES-256). All data in transit (REST/WebSockets) is secured via TLS 1.3.
+- **Immutable Auditing**: Every data access event is permanently recorded in the append-only `audit_events` table, satisfying HIPAA access log requirements.
+
+### 3.6 VRAM Orchestration (Consumer Hardware Constraint)
 To ensure the system can run locally on consumer-grade hospital hardware (e.g., RTX 3060 6GB VRAM), ConsiliumMD implements a strict **Model-Swapping Architecture**:
 - The backend dynamically unloads the multimodal Vision/OCR models from VRAM after parsing the uploaded images/PDFs.
 - It then allocates the VRAM to load the CARMA LLM (e.g., Llama-3-8B-Instruct quantized) to execute the RPD debate, completely preventing Out-Of-Memory (OOM) fatal crashes.
