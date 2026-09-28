@@ -40,7 +40,13 @@ ConsiliumMD is a majestic, production-ready web portal with Role-Based Access Co
 - **Processing**: A time-series database (e.g., InfluxDB) buffers the high-frequency telemetry. An edge-detection algorithm watches for critical threshold breaches (e.g., sudden SpO2 drop).
 - **Output**: Live, pulsing vitals on the "Cinematic Patient Data Canvas" and automatic, zero-click triggering of the CARMA engine when real-time simulated hardware data diverges from the predicted clinical path.
 
-### 3.4 CARMA Decision Engine Integration & UI State Mapping
+### 3.5 Patient Portal & Shared Decision-Making Workflow (Phase 4)
+While the MVP focuses on clinicians, the underlying database schema actively reserves a `Patient` role to support a transparent, patient-facing workflow:
+- **Plain-Language Translation**: When a doctor accepts a CARMA recommendation, a secondary LLM pass automatically translates the highly technical medical rationale into an 8th-grade reading level "Care Plan", accessible via the Patient Portal.
+- **Dynamic Consent Management**: Patients can securely log in to grant or revoke consent for their anonymized data to be processed by specific CARMA decision classes.
+- **Direct Patient Preference Elicitation**: When CARMA triggers an `Elicit` state (Judgment Call), the tradeoff (e.g., "Aggressive Treatment vs. Quality of Life") can be pushed directly to the patient's mobile app. Their selected preference is securely routed back to the Doctor's dashboard to inform the final clinical decision.
+
+### 3.6 CARMA Decision Engine Integration & UI State Mapping
 ConsiliumMD acts as the orchestrator. Extracted multi-modal data is structured into a `ClinicalQuery` and sent to CARMA's API. ConsiliumMD strictly maps CARMA's mathematical outputs to its **5-State Routing UI**:
 - **Epistemic Conflict (Missing State $S$):** If CARMA detects a missing factual premise, ConsiliumMD triggers the **`Retrieve` State**, actively prompting the clinician to upload the missing lab result or DICOM image.
 - **Normative Conflict (RPD Weight Divergence $\Delta w$):** If CARMA's Inverse Optimizer detects divergent clinical values, ConsiliumMD triggers the **`Elicit` State**, rendering the "Generative Elicitation Scale" for the doctor to input patient preferences.
@@ -48,13 +54,13 @@ ConsiliumMD acts as the orchestrator. Extracted multi-modal data is structured i
 - **ECL Collapse / Unsafe Bounds:** If the Evidential Conflict Landscape graph is completely disconnected, ConsiliumMD triggers the **`Escalate` State**, safely bypassing the AI and routing to a human senior reviewer.
 - **Consensus:** Triggers the **`Answer` State** with a standard recommendation card.
 
-### 3.5 Data Privacy & HIPAA/GDPR Compliance Pipeline
+### 3.7 Data Privacy & HIPAA/GDPR Compliance Pipeline
 To ensure deployability in highly regulated clinical environments, ConsiliumMD enforces strict data boundaries:
 - **Pre-LLM PHI Scrubbing (Anonymization Gateway)**: Before any patient context is sent to the CARMA engine, it passes through a local NLP scrubbing layer (e.g., Microsoft Presidio). All Protected Health Information (PHI) like names, SSNs, and birthdates are replaced with generic tokens (e.g., `[PATIENT_A]`, `[AGE_65]`). The LLM never sees identifying data.
 - **Encryption**: The PostgreSQL database encrypts all records at rest (AES-256). All data in transit (REST/WebSockets) is secured via TLS 1.3.
 - **Immutable Auditing**: Every data access event is permanently recorded in the append-only `audit_events` table, satisfying HIPAA access log requirements.
 
-### 3.6 VRAM Orchestration (Consumer Hardware Constraint)
+### 3.8 VRAM Orchestration (Consumer Hardware Constraint)
 To ensure the system can run locally on consumer-grade hospital hardware (e.g., RTX 3060 6GB VRAM), ConsiliumMD implements a strict **Model-Swapping Architecture**:
 - The backend dynamically unloads the multimodal Vision/OCR models from VRAM after parsing the uploaded images/PDFs.
 - It then allocates the VRAM to load the CARMA LLM (e.g., Llama-3-8B-Instruct quantized) to execute the RPD debate, completely preventing Out-Of-Memory (OOM) fatal crashes.
