@@ -40,11 +40,11 @@ ConsiliumMD is a majestic, production-ready web portal with Role-Based Access Co
 - **Processing**: A time-series database (e.g., InfluxDB) buffers the high-frequency telemetry. An edge-detection algorithm watches for critical threshold breaches (e.g., sudden SpO2 drop).
 - **Output**: Live, pulsing vitals on the "Cinematic Patient Data Canvas" and automatic, zero-click triggering of the CARMA engine when real-time simulated hardware data diverges from the predicted clinical path.
 
-### 3.5 Patient Portal & Shared Decision-Making Workflow (Phase 4)
-While the MVP focuses on clinicians, the underlying database schema actively reserves a `Patient` role to support a transparent, patient-facing workflow:
-- **Plain-Language Translation**: When a doctor accepts a CARMA recommendation, a secondary LLM pass automatically translates the highly technical medical rationale into an 8th-grade reading level "Care Plan", accessible via the Patient Portal.
-- **Dynamic Consent Management**: Patients can securely log in to grant or revoke consent for their anonymized data to be processed by specific CARMA decision classes.
-- **Direct Patient Preference Elicitation**: When CARMA triggers an `Elicit` state (Judgment Call), the tradeoff (e.g., "Aggressive Treatment vs. Quality of Life") can be pushed directly to the patient's mobile app. Their selected preference is securely routed back to the Doctor's dashboard to inform the final clinical decision.
+### 3.5 Comprehensive Patient Data Management Workflow
+ConsiliumMD is not just a stateless calculator; it serves as a robust, longitudinal patient registry for the clinician:
+- **Patient Profile Creation & Storage**: Clinicians can create and save detailed patient profiles (demographics, chronic conditions, active medications, allergies). This data is persistently stored in PostgreSQL and serves as the baseline `PatientContext` for all future CARMA queries.
+- **Longitudinal Case History**: When a doctor views a patient, they see a chronological timeline of every past CARMA recommendation, the extracted evidence that drove it, and the final clinical action taken.
+- **Dynamic Context Updating**: As new multimodal data (PDFs/Images) or real-time IoMT telemetry is ingested, the patient's central profile is automatically updated. If a new lab result contradicts an old one, the system flags the updated state for the clinician's review.
 
 ### 3.6 CARMA Decision Engine Integration & UI State Mapping
 ConsiliumMD acts as the orchestrator. Extracted multi-modal data is structured into a `ClinicalQuery` and sent to CARMA's API. ConsiliumMD strictly maps CARMA's mathematical outputs to its **5-State Routing UI**:
