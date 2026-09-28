@@ -13,10 +13,14 @@ ConsiliumMD is a majestic, production-ready web portal with Role-Based Access Co
 
 ## 3. Architecture & Pipelines
 
-### 3.1 Web Portal & RBAC
-- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS. Features dynamic, visually rich dashboards tailored to user roles.
-- **Backend**: FastAPI for handling REST API requests, routing authentication, and enforcing strict RBAC rules.
-- **Database**: PostgreSQL for storing patient data, clinical cases, recommendations, and audit logs.
+### 3.1 Web Portal & Strict Role-Based Access Control (RBAC)
+- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS. Features dynamic, visually rich dashboards strictly tailored to user roles.
+- **Backend & Auth**: FastAPI handles JWT-based Auth (Access/Refresh tokens) and enforces a strict permission matrix.
+- **The RBAC Matrix**:
+  - **Doctor / Clinician**: The primary user. Can upload multimodal data, receive CARMA recommendations, acknowledge `Warn` states, resolve `Elicit` states, and override decisions.
+  - **Senior Clinician / Reviewer**: The human backstop. Their dashboard exclusively receives cases where CARMA triggers the `Escalate` state (e.g., non-identifiable conflicts, ECL graph collapse). They provide final resolution.
+  - **Admin / Compliance Officer**: Has zero clinical access. Their dashboard manages user roles, tracks the append-only `audit_events` log, and monitors the "Institutional Reversal Radar."
+- **Database**: PostgreSQL for storing patient data, clinical cases, recommendations, and immutable audit logs.
 
 ### 3.2 Medical Image Processing Pipeline
 - **Ingestion**: Secure DICOM and standard image upload endpoint.
@@ -24,16 +28,30 @@ ConsiliumMD is a majestic, production-ready web portal with Role-Based Access Co
 - **Output**: Extracted clinical findings and structured visual contexts are fed directly into the patient context for CARMA.
 
 ### 3.3 PDF & Document Retrieval Pipeline
+### 3.3 PDF & Document Retrieval Pipeline
 - **Ingestion**: Secure PDF and image (prescription) upload.
 - **Processing**:
   - OCR (Optical Character Recognition) via tools like Tesseract or cloud-based Document AI.
   - NLP extraction of key entities (medications, conditions, vitals, lab results).
 - **Output**: Structured text appended to the patient's electronic health record and passed to CARMA for evidence grounding.
 
-### 3.4 CARMA Decision Engine Integration
-- ConsiliumMD acts as the orchestrator. Extracted multi-modal data (from images and text) is structured into a comprehensive `ClinicalQuery` and sent to CARMA's API.
-- CARMA processes the scenario through its Evidential Conflict Landscape (ECL), combining **RPD cross-sectional analysis** with a **Longitudinal Reversal Risk** model to place the decision in a 2D Confidence Space. It returns recommendations, confidence scores, conflict types, and structural fragility warnings.
-- ConsiliumMD renders these insights through its **5-state routing UI** (Answer, Retrieve, Elicit, Warn, Escalate), providing a specialized *Warn Clinician* path for high reversal-risk scenarios.
+### 3.4 IoMT & Real-Time Hardware Telemetry Pipeline (Phase 4)
+- **Ingestion (Academic Simulation)**: For MVP and academic demonstration, connecting to proprietary hospital hardware is unfeasible. Instead, we implement a `mock_vitals_streamer.py` that reads historical high-frequency telemetry from the **MIMIC-IV** dataset and streams it over WebSockets, flawlessly simulating live ICU monitor data (Heart Rate, SpO2).
+- **Processing**: A time-series database (e.g., InfluxDB) buffers the high-frequency telemetry. An edge-detection algorithm watches for critical threshold breaches (e.g., sudden SpO2 drop).
+- **Output**: Live, pulsing vitals on the "Cinematic Patient Data Canvas" and automatic, zero-click triggering of the CARMA engine when real-time simulated hardware data diverges from the predicted clinical path.
+
+### 3.4 CARMA Decision Engine Integration & UI State Mapping
+ConsiliumMD acts as the orchestrator. Extracted multi-modal data is structured into a `ClinicalQuery` and sent to CARMA's API. ConsiliumMD strictly maps CARMA's mathematical outputs to its **5-State Routing UI**:
+- **Epistemic Conflict (Missing State $S$):** If CARMA detects a missing factual premise, ConsiliumMD triggers the **`Retrieve` State**, actively prompting the clinician to upload the missing lab result or DICOM image.
+- **Normative Conflict (RPD Weight Divergence $\Delta w$):** If CARMA's Inverse Optimizer detects divergent clinical values, ConsiliumMD triggers the **`Elicit` State**, rendering the "Generative Elicitation Scale" for the doctor to input patient preferences.
+- **Longitudinal Reversal Risk (Hazard > Threshold):** If the Deep Survival model flags the guideline as fragile, ConsiliumMD triggers the **`Warn` State**, forcing a mandatory UI acknowledgment checkbox before the clinician can proceed.
+- **ECL Collapse / Unsafe Bounds:** If the Evidential Conflict Landscape graph is completely disconnected, ConsiliumMD triggers the **`Escalate` State**, safely bypassing the AI and routing to a human senior reviewer.
+- **Consensus:** Triggers the **`Answer` State** with a standard recommendation card.
+
+### 3.5 VRAM Orchestration (Consumer Hardware Constraint)
+To ensure the system can run locally on consumer-grade hospital hardware (e.g., RTX 3060 6GB VRAM), ConsiliumMD implements a strict **Model-Swapping Architecture**:
+- The backend dynamically unloads the multimodal Vision/OCR models from VRAM after parsing the uploaded images/PDFs.
+- It then allocates the VRAM to load the CARMA LLM (e.g., Llama-3-8B-Instruct quantized) to execute the RPD debate, completely preventing Out-Of-Memory (OOM) fatal crashes.
 
 ## 4. Phased Implementation Strategy
 
@@ -73,9 +91,16 @@ To elevate ConsiliumMD into a majestic, state-of-the-art clinical product, the f
 - **"What-If" Counterfactual Simulation**: A dynamic slider board where a clinician can instantly tweak patient variables (e.g., changing age or eGFR) and watch the 2D Confidence Space (RPD & Reversal Risk) shift in real-time.
 - **Cinematic Reasoning Replay**: A "play" button that visually steps through CARMA's decision-making process in a 10-second animated sequence—from raw DICOM extraction to plotting on the 2D Confidence Space, to resolving the adversarial debate, ensuring total, intuitive transparency.
 - **Ambient Clinical Dictation**: Integrate `Whisper.cpp` in the browser so doctors can dictate patient context with their voice for zero cost, bypassing typing entirely.
+- **Smart Clinical Input & Epistemic Resolution Forms**: A sleek, predictive dual-input interface for ad-hoc queries and gap resolution. When CARMA triggers a `Retrieve` state (Epistemic Gap), the UI dynamically generates a beautiful prompt (e.g., "Missing Patient's LDL Cholesterol"). The doctor has complete flexibility: they can either **directly type** the missing value into a glowing input field, OR **drag-and-drop** the missing lab PDF/DICOM file for automatic extraction. Both paths seamlessly unblock the CARMA engine.
 - **Auto-Drafted SOAP Notes**: When a clinician resolves a case, ConsiliumMD auto-generates a perfectly formatted SOAP note containing the clinical rationale, ready for 1-click copy/paste into their EHR.
 
+### 6.1b Workflow Acceleration (Zero-Friction Clinician UX)
+- **1-Click EHR Export (SMART on FHIR)**: Instead of copy-pasting, doctors can click "Export to EHR" to push the CARMA recommendation, evidence citations, and SOAP note directly into Epic or Cerner via HL7 FHIR standards.
+- **Automated Pre-Rounding Summaries (Morning Huddle)**: A background worker runs overnight on the doctor's patient census. When the doctor logs in at 7:00 AM, ConsiliumMD provides a "Morning Huddle" dashboard, pre-flagging any patients currently on protocols that have tripped a `Warn` (High Reversal Risk) alert before the doctor even opens a chart.
+- **Auto-Generated ICD-10 & CPT Billing Codes**: When a doctor accepts a CARMA recommendation, the system automatically parses the intervention and suggests the most accurate, compliant ICD-10 diagnostic and CPT procedure codes, instantly saving administrative billing time.
+
 ### 6.2 Advanced Visualizations
+- **Cinematic Patient Data Canvas**: A majestic, glassmorphic dashboard that beautifully renders all ingested multimodal patient data. Instead of raw text blocks, lab results are rendered as dynamic sparklines, OCR'ed prescriptions as structured medication cards, and vitals with subtle micro-animations (e.g., a pulsing heart rate indicator), ensuring total situational awareness for the clinician at a glance.
 - **Dynamic Argument Flow (Animated Network Graph)**: A stunning, animated directed graph to visualize the CARMA adversarial debate. Nodes represent specific guidelines (e.g., AHA, NICE), and pulsing edges (red for conflict, green for concordance) visually funnel into the final recommendation.
 - **Generative Elicitation Scale**: When the system triggers an `Elicit` state (Judgment Call), it renders a glowing, glassmorphic balance scale. As the clinician adjusts their value preference (e.g., "Longevity" vs. "Quality of Life"), the scale visually tilts and the recommendation text dynamically rewrites itself.
 - **2D Confidence Space Scatterplot**: A dynamic 3D or 2D scatterplot mapping the current case against historical reversals (Reversal Risk on X-axis, RPD severity on Y-axis).
