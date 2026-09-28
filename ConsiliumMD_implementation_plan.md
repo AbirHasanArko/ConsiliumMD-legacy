@@ -1,0 +1,158 @@
+# ConsiliumMD: Full Implementation Plan
+
+## 1. Project Overview
+ConsiliumMD is a majestic, production-ready web portal with Role-Based Access Control (RBAC) that serves as the clinical frontend for **CARMA** (Conflict-Aware Reasoning with Mathematical Assurance). It seamlessly integrates medical image processing and document extraction pipelines to allow medical professionals to retrieve data directly from patient uploads (X-rays, MRIs, CT scans, PDFs, prescriptions), leveraging CARMA as the central decision engine.
+
+## 2. Core Features
+- **Majestic Web Portal with RBAC**: A visually stunning, highly responsive, and premium frontend built with modern design principles (React, Tailwind CSS, micro-animations). Roles include Admin, Doctor, Reviewer/Senior Clinician, and Nurse.
+- **Multimodal Data Retrieval & Processing**: Medical professionals can directly upload and extract insights from:
+  - **Medical Images**: X-rays, MRIs, and CT scans (Medical Image Processing Pipeline).
+  - **Documents**: Medical reports, prescriptions, and clinical notes (PDF to Text / OCR Pipeline).
+- **CARMA as the Decision Engine**: Direct integration with the CARMA reasoning engine for conflict-aware clinical decision support, displaying evidence-derived confidence and resolving evidence gaps vs. judgment calls through a **2D Confidence Space** combining RPD (Revealed-Preference Decomposition) and Longitudinal Reversal Risk prediction.
+- **Flawless Execution**: High availability, comprehensive test coverage, robust error handling, and append-only audit logging for compliance.
+
+## 3. Architecture & Pipelines
+
+### 3.1 Web Portal & RBAC
+- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS. Features dynamic, visually rich dashboards tailored to user roles.
+- **Backend**: FastAPI for handling REST API requests, routing authentication, and enforcing strict RBAC rules.
+- **Database**: PostgreSQL for storing patient data, clinical cases, recommendations, and audit logs.
+
+### 3.2 Medical Image Processing Pipeline
+- **Ingestion**: Secure DICOM and standard image upload endpoint.
+- **Processing**: Vision models (e.g., MedSAM, specialized ViT models, or integrated external APIs) analyze X-rays, MRIs, and CT scans.
+- **Output**: Extracted clinical findings and structured visual contexts are fed directly into the patient context for CARMA.
+
+### 3.3 PDF & Document Retrieval Pipeline
+- **Ingestion**: Secure PDF and image (prescription) upload.
+- **Processing**:
+  - OCR (Optical Character Recognition) via tools like Tesseract or cloud-based Document AI.
+  - NLP extraction of key entities (medications, conditions, vitals, lab results).
+- **Output**: Structured text appended to the patient's electronic health record and passed to CARMA for evidence grounding.
+
+### 3.4 CARMA Decision Engine Integration
+- ConsiliumMD acts as the orchestrator. Extracted multi-modal data (from images and text) is structured into a comprehensive `ClinicalQuery` and sent to CARMA's API.
+- CARMA processes the scenario through its Evidential Conflict Landscape (ECL), combining **RPD cross-sectional analysis** with a **Longitudinal Reversal Risk** model to place the decision in a 2D Confidence Space. It returns recommendations, confidence scores, conflict types, and structural fragility warnings.
+- ConsiliumMD renders these insights through its **5-state routing UI** (Answer, Retrieve, Elicit, Warn, Escalate), providing a specialized *Warn Clinician* path for high reversal-risk scenarios.
+
+## 4. Phased Implementation Strategy
+
+### Phase 1: Majestic Web Portal Foundation
+- Set up the React frontend with a premium, majestic design system (glassmorphism, smooth transitions, modern typography).
+- Implement JWT-based Auth and the RBAC matrix (Admin, Doctor, Senior Clinician).
+- Scaffold the patient dashboard, case management views, and the unified shell application.
+
+### Phase 2: Multimodal Ingestion Pipelines
+- **Document Pipeline**: Build PDF parsing and OCR for prescriptions and clinical reports. Store extracted text robustly.
+- **Image Pipeline**: Build the image upload component and integration with a medical imaging analysis service/model to derive text-based findings from images.
+- Validate data extraction accuracy and latency.
+
+### Phase 3: CARMA Integration
+- Connect the backend to the CARMA reasoning engine (`/api/v1/analyze`).
+- Map extracted multimodal data into CARMA's required context format.
+- Update the UI to beautifully display CARMA's reasoning trails, confidence badges, and preference elicitation widgets.
+
+### Phase 4: Polish, Testing, & Deployment
+- Ensure flawless UX with error boundaries, loading states, and robust API retries.
+- Comprehensive end-to-end testing of the complete workflow (Upload -> Extract -> CARMA -> Recommendation).
+- Finalize compliance requirements (append-only audit logs) and prepare for a seamless production deployment.
+
+## 5. Success Criteria
+- The portal is fully functional, visually majestic, and strictly role-gated.
+- Multimodal data (images, PDFs) is successfully parsed, extracted, and utilized in clinical decision making.
+- CARMA seamlessly drives the clinical recommendations without bottlenecks.
+- The system works flawlessly under load with no unhandled exceptions or silent failures.
+
+## 6. Elite Features & Advanced Visualizations
+
+To elevate ConsiliumMD into a majestic, state-of-the-art clinical product, the following elite features and visualizations are integrated:
+
+### Elite Features
+- **Interactive WebGL DICOM Viewer with AI Overlays**: Don't just extract text. Embed an open-source DICOM viewer in the browser where the AI draws bounding boxes over anomalies, and hovering over them highlights the specific CARMA evidence.
+- **3D Interactive Patient Digital Twin**: An immersive 3D human body mesh. As multimodal data is ingested (e.g., chest X-rays, renal lab tests), the relevant organs illuminate with condition tags. Clinicians can rotate the model and click on an organ to instantly filter all extracted CARMA evidence for that specific physiological system.
+- **"What-If" Counterfactual Simulation**: A dynamic slider board where a clinician can instantly tweak patient variables (e.g., changing age or eGFR) and watch the 2D Confidence Space (RPD & Reversal Risk) shift in real-time.
+- **Cinematic Reasoning Replay**: A "play" button that visually steps through CARMA's decision-making process in a 10-second animated sequence—from raw DICOM extraction to plotting on the 2D Confidence Space, to resolving the adversarial debate, ensuring total, intuitive transparency.
+- **Ambient Clinical Dictation**: Integrate `Whisper.cpp` in the browser so doctors can dictate patient context with their voice for zero cost, bypassing typing entirely.
+- **Auto-Drafted SOAP Notes**: When a clinician resolves a case, ConsiliumMD auto-generates a perfectly formatted SOAP note containing the clinical rationale, ready for 1-click copy/paste into their EHR.
+
+### 6.2 Advanced Visualizations
+- **Dynamic Argument Flow (Animated Network Graph)**: A stunning, animated directed graph to visualize the CARMA adversarial debate. Nodes represent specific guidelines (e.g., AHA, NICE), and pulsing edges (red for conflict, green for concordance) visually funnel into the final recommendation.
+- **Generative Elicitation Scale**: When the system triggers an `Elicit` state (Judgment Call), it renders a glowing, glassmorphic balance scale. As the clinician adjusts their value preference (e.g., "Longevity" vs. "Quality of Life"), the scale visually tilts and the recommendation text dynamically rewrites itself.
+- **2D Confidence Space Scatterplot**: A dynamic 3D or 2D scatterplot mapping the current case against historical reversals (Reversal Risk on X-axis, RPD severity on Y-axis).
+- **Institutional Reversal Radar**: A radar chart for Admins showing hospital-wide guideline drift (where current local protocols sit in the high-reversal-risk danger zone).
+- **Evidence Topography Heatmap**: A visual map showing clusters of evidence, visually differentiating epistemic gaps from normative camps, giving clinicians an intuitive view of medical consensus.
+
+### 6.3 Advanced Functional & Quality Improvements (Non-UI)
+- **Continuous Reversal Surveillance (Background Daemon)**: The system longitudinally tracks accepted recommendations. A background worker continuously monitors newly published guidelines and medical literature. If the CARMA Reversal Risk engine detects that a previously sound protocol has suddenly become "high-risk," it triggers a retrospective "Fragility Alert" to the prescribing clinician.
+- **Multimodal Discrepancy Detection**: ConsiliumMD cross-references the output of its own pipelines. If the OCR text from a radiologist's PDF report says "No signs of cardiomegaly," but the local Vision Model analyzing the raw DICOM X-ray flags an enlarged heart, the system halts and escalates a `Cross-Modality Discrepancy` alert before querying CARMA.
+- **Pharmacogenomic & Polypharmacy Guardrails**: Enhance the post-synthesis Safety Auditor with a deterministic rule engine (referencing RxNorm/SIDER). Before CARMA's recommendation is finalized, it guarantees the suggested drug dosage does not conflict with the patient's existing polypharmacy profile or known genetic metabolizer status, ensuring a strict zero-hallucination guarantee for prescriptions.
+- **Federated Preference Learning (Normative Memory)**: When the system resolves an `Elicit` (Judgment Call) state, it records the clinician's normative choice. Over time, ConsiliumMD learns the baseline preference of specific hospital departments (e.g., "Cardiology strongly favors Quality of Life for 80+ patients"). Future elicitations can smartly pre-suggest this institutional baseline, speeding up clinical workflows.
+- **Data Completeness Gatekeeper (Pre-CARMA Triage)**: An algorithmic triage layer that calculates "Contextual Entropy" before ever querying the LLM. If critical variables required by standard guidelines are missing (e.g., trying to calculate ASCVD risk without an HDL cholesterol lab), it refuses the query and explicitly prompts the clinician to order the missing lab, saving compute costs and preventing "garbage-in, garbage-out."
+
+## 7. Real Data Gathering & Demonstration Plan
+To demonstrate the platform's power without relying on synthetic mocks, we will use robust, open-source real-world datasets:
+
+### 7.1 Patient Profiles & Medical Notes
+- **MIMIC-IV**: The gold standard for de-identified ICU and emergency patient data. We will extract realistic patient profiles (vitals, lab results, diagnoses).
+- **MIMIC-IV-Note**: Real de-identified clinical notes, discharge summaries, and radiology reports to test the PDF/Document text-extraction and OCR pipelines in real clinical syntax.
+
+### 7.2 Medical Imaging
+- **MIMIC-CXR & CheXpert**: Massive open-source datasets of chest X-rays. These provide perfect test cases for the Interactive DICOM Viewer and AI Overlays (highlighting cardiomegaly, consolidation, etc.).
+- **fastMRI**: Real MRI datasets from NYU/Facebook for testing the image processing pipeline against non-X-ray modalities.
+
+### 7.3 Guidelines & Evidence Base
+- **CECB-T (Type-Labeled Clinical Evidence Conflict Benchmark)**: We will ingest real medical guidelines (ACC/AHA, USPSTF, NICE) explicitly curated in CARMA's foundational plan to test the RPD and Reversal Risk engines.
+
+## 8. Automated Test Suite Plan
+To guarantee the system works flawlessly, we will implement a multi-layered automated test suite:
+
+### 8.1 Backend & Database (FastAPI + pytest)
+- **Unit Tests**: Full coverage for all endpoints using `pytest`. Mocking the CARMA backend response with `respx` or `responses` to verify proper HTTP handling.
+- **Database & Audit Integrity**: Integration tests using a test SQLite/Postgres instance to ensure the `audit_events` table strictly enforces its append-only DB triggers (attempting to UPDATE/DELETE must raise exceptions).
+- **Multimodal Pipeline Verification**: Dedicated fixtures (1 known DICOM file, 1 known PDF) passed through the image/document pipelines to assert deterministic NLP and OCR extraction accuracy.
+
+### 8.2 Frontend & UI (React + Vitest/Playwright)
+- **Component Tests (Vitest + React Testing Library)**: Assert that specific UI elements render correctly depending on the data. For example, verifying the Recommendation Card accurately switches badge colors and panels based on the 5-state Routing Decision (e.g., rendering the `WARN` alert box).
+- **End-to-End (E2E) Workflows (Playwright)**: Browser-based tests simulating a complete clinical user journey:
+  1. Login as `doctor`.
+  2. Upload a test X-ray and PDF.
+  3. Verify the extraction populates the UI.
+  4. Use the "What-If" slider.
+  5. Accept a recommendation and verify the SOAP note is generated.
+
+## 9. Publication Strategy & Open-Source Readiness
+This implementation directly supports the project's **"Two-Paper" publication strategy**, serving as the translational foundation for the second paper:
+
+### 9.1 Paper 2: The Systems & Translational Paper
+- **Target Venues (Q1 & A*):** *npj Digital Medicine*, *JAMIA*, *The Lancet Digital Health*, and A* conferences like *NeurIPS* (Datasets/Benchmarks) or *MLHC* (Machine Learning for Healthcare).
+- **Focus:** Demonstrating an end-to-end multimodal clinical workflow. ConsiliumMD ingests real-world data (PDFs, X-rays), parses it into a structured `PatientContext`, and utilizes the CARMA engine to trigger appropriate clinical routing (Answer, Retrieve, Elicit, Warn, Escalate).
+- **Novelty:** Solving the "last-mile" problem of AI hallucination via safe, evidence-grounded gating in a deployable, premium UI.
+
+### 9.2 Repository Publication Readiness
+To ensure the repository is ready for peer-review and public open-source release from Day 1:
+- **Reproducibility (Docker):** Full `docker-compose` orchestration encompassing the frontend, backend, database, and CARMA integration for 1-click reviewer setup.
+- **Citation Standards:** Inclusion of a `CITATION.cff` file ensuring correct academic attribution.
+- **Documentation:** High-quality `README.md`, architecture diagrams, and fully commented codebase adhering to clinical software best practices.
+- **Data Compliance:** All provided sample datasets, fixtures, and database seeds will be rigorously de-identified to comply with open-data and HIPAA/GDPR standards.
+
+## 10. Clinical Validation & Academic Evaluation Methodology
+To guarantee acceptance in Q1 medical journals and A* computer science conferences, the system will undergo rigorous, statistically sound evaluation:
+
+### 10.1 Retrospective Cohort Evaluation (Quantitative)
+- **Dataset:** A stratified sample of $N=1,000$ complex patient cases extracted from MIMIC-IV, ensuring representation across highly debated clinical topics (e.g., lipid management in the elderly).
+- **Primary Endpoints:** 
+  - **Routing Accuracy:** Precision, Recall, and $F_1$-score of the system correctly mapping cases to the 5-state UI (Answer, Retrieve, Elicit, Warn, Escalate) compared against a gold-standard board of 3 senior clinicians.
+  - **Discrepancy Detection Rate:** Measuring the True Positive Rate (TPR) of the Multimodal Discrepancy Detection engine when fed deliberately contradictory image-text pairs.
+
+### 10.2 Clinical Utility & Workflow Metrics (Qualitative & Operational)
+- **Time-to-Decision ($\Delta t$):** Measuring the reduction in time required for a clinician to reach a final, evidence-backed decision using ConsiliumMD vs. a standard EHR + manual UpToDate search baseline.
+- **System Usability Scale (SUS) & Trust:** Utilizing standardized Likert-scale instruments to measure clinician confidence in the "Cinematic Reasoning Replay" and "2D Confidence Space" visualizations.
+
+### 10.3 Safety & Hallucination Auditing
+- **Zero-Hallucination Prescription Guarantee:** Reporting the empirical failure rate of the Pharmacogenomic & Polypharmacy Guardrails. The target is a strictly bounded $0\%$ critical failure rate, proving the superiority of deterministic programmatic constraints overlaid on LLMs.
+- **Guideline Drift Sensitivity:** Evaluating the Continuous Reversal Surveillance engine against historical data (e.g., injecting the 2017 ACC/AHA hypertension guideline shift and measuring the latency to systemic "Fragility Alert" propagation).
+
+### 10.4 Ethical Constraints & Limitations Disclosure
+Top-tier venues mandate robust discussion of limitations. The implementation and paper will formally address:
+- **Algorithmic Bias:** Acknowledging and testing against the demographic limitations of the MIMIC-IV and CheXpert training sets.
+- **Automation Bias:** Addressing the risk of clinicians over-relying on the system, detailing the UI friction (e.g., forced "Acknowledge Risk" buttons) intentionally designed to mitigate rubber-stamping.

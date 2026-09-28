@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use this software in your research, please cite the accompanying paper and the repository as below."
+authors:
+  - family-names: "Hasan"
+    given-names: "Abir"
+title: "ConsiliumMD: An End-to-End Multimodal Clinical Decision Support System Featuring Epistemic-Normative Gating"
+version: 1.0.0
+date-released: 2026-09-30
+url: "https://github.com/HelloMed/ConsiliumMD"
